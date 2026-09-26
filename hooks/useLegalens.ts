@@ -284,6 +284,11 @@ export function useLegalens() {
     URL.revokeObjectURL(url);
   }, [storedDocs, activities]);
 
+  const clearActivities = useCallback(() => {
+    clearStoredActivities();
+    setActivities([]);
+  }, []);
+
   return {
     storedDocs,
     activities,
@@ -313,6 +318,6 @@ export function useLegalens() {
     runAnalysis,
     translateContent,
     exportBackup,
-    clearActivities: clearStoredActivities,
+    clearActivities,
   };
 }
