@@ -84,6 +84,7 @@ export default function Page() {
     deleteDocument,
     toggleChecklistItem,
     runAnalysis,
+    translateContent,
     exportBackup,
     clearActivities,
   } = useLegalens();
@@ -221,7 +222,7 @@ export default function Page() {
 
         <SidebarFooter>
           <button className="side-link" onClick={() => setModal("settings")} type="button">
-            <Settings2 size={18} aria-hidden="true" /> Gemini connection
+            <Settings2 size={18} aria-hidden="true" /> AI Settings
           </button>
           <button className="side-link" onClick={() => setModal("about")} type="button">
             <CircleHelp size={18} aria-hidden="true" /> Help &amp; legal boundaries
@@ -279,8 +280,8 @@ export default function Page() {
               type="button"
               aria-label="Configure Gemini connection"
             >
-              <Sparkles size={15} aria-hidden="true" />
-              {key ? "Gemini configured" : "Connect Gemini"}
+              <Sparkles size={15} className="text-emerald-600" aria-hidden="true" />
+              <span className="font-medium text-slate-800">Gemini 3.5 Flash Lite · Active</span>
               <ChevronRight size={14} aria-hidden="true" />
             </button>
           </div>
@@ -357,6 +358,7 @@ export default function Page() {
                     onAskQuestion={(q) => runAnalysis("question", q)}
                     answer={answer}
                     isSample={isSample}
+                    onTranslate={translateContent}
                   />
 
                   {activeDocument && (
@@ -367,6 +369,7 @@ export default function Page() {
                       onDelete={(id) => handleDeleteTrigger(id)}
                       onAnalyze={() => runAnalysis("analyze")}
                       onViewReview={() => setView("Workspace")}
+                      onTranslate={translateContent}
                     />
                   )}
                 </>
@@ -396,6 +399,7 @@ export default function Page() {
                   onDelete={(id) => handleDeleteTrigger(id)}
                   onAnalyze={() => runAnalysis("analyze")}
                   onViewReview={() => setView("Workspace")}
+                  onTranslate={translateContent}
                 />
               )}
             </div>
@@ -411,6 +415,7 @@ export default function Page() {
               onCompare={() => runAnalysis("compare")}
               busy={busy}
               result={result}
+              onTranslate={translateContent}
             />
           )}
 

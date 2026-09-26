@@ -36,40 +36,18 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="app-dialog settings-dialog" aria-describedby="settings-desc">
         <DialogHeader>
-          <DialogTitle>Connect Google Gemini</DialogTitle>
+          <DialogTitle>AI Engine &amp; Model Settings</DialogTitle>
           <DialogDescription id="settings-desc">
-            Connect your Gemini API key for live clause extraction, plain-English summaries, contract comparison, and question answering.
+            Legalens is powered by Google Gemini 3.5 Flash Lite for real-time clause extraction, plain-English translation, and comparative review.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          <div>
-            <label htmlFor="gemini-api-key-input" className="block text-xs font-semibold text-slate-700 mb-1">
-              Google Gemini API Key
-            </label>
-            <div className="relative">
-              <Input
-                id="gemini-api-key-input"
-                type={showKey ? "text" : "password"}
-                autoComplete="off"
-                value={apiKey}
-                onChange={(e) => onSaveKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                aria-label={showKey ? "Hide API key" : "Show API key"}
-              >
-                {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500">
-              <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
-              <span>Your key is kept only in browser memory and transmitted directly to Google.</span>
-            </div>
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2.5 text-xs text-emerald-800">
+            <Check size={16} className="text-emerald-600 shrink-0" />
+            <span>
+              <strong>Gemini AI Active:</strong> Pre-configured server API key is loaded and running with Gemini 3.5 Flash Lite.
+            </span>
           </div>
 
           <div>
@@ -90,17 +68,38 @@ export function SettingsDialog({
             </select>
           </div>
 
-          <div className="pt-2 flex items-center justify-between">
-            <a
-              className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 font-medium"
-              href="https://aistudio.google.com/apikey"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Get a free API key from Google AI Studio <ArrowUpRight size={13} />
-            </a>
+          <div>
+            <label htmlFor="gemini-api-key-input" className="block text-xs font-semibold text-slate-700 mb-1">
+              Custom Gemini API Key <span className="text-slate-400 font-normal">(Optional Override)</span>
+            </label>
+            <div className="relative">
+              <Input
+                id="gemini-api-key-input"
+                type={showKey ? "text" : "password"}
+                autoComplete="off"
+                value={apiKey}
+                onChange={(e) => onSaveKey(e.target.value)}
+                placeholder="Leave blank to use pre-configured server key"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                aria-label={showKey ? "Hide API key" : "Show API key"}
+              >
+                {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500">
+              <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
+              <span>Custom keys are stored only in your browser memory for session isolation.</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center justify-end">
             <Button onClick={onClose} size="sm">
-              <Check size={14} className="mr-1" /> Use connection
+              <Check size={14} className="mr-1" /> Done
             </Button>
           </div>
         </div>

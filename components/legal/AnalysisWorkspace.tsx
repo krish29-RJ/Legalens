@@ -23,6 +23,7 @@ interface AnalysisWorkspaceProps {
   onAskQuestion: (q: string) => Promise<void>;
   answer: string;
   isSample?: boolean;
+  onTranslate?: (text: string, language: string) => Promise<string | null>;
 }
 
 export function AnalysisWorkspace({
@@ -31,9 +32,14 @@ export function AnalysisWorkspace({
   onAskQuestion,
   answer,
   isSample,
+  onTranslate,
 }: AnalysisWorkspaceProps) {
   const [questionInput, setQuestionInput] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState("Hindi (हिंदी)");
+  const [translatedSummary, setTranslatedSummary] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showTranslated, setShowTranslated] = useState(false);
 
   if (!result) {
     return null;
@@ -52,25 +58,89 @@ export function AnalysisWorkspace({
     setQuestionInput("");
   };
 
+  const handleTranslateSummary = async () => {
+    if (!onTranslate || !result?.summary) return;
+    setIsTranslating(true);
+    const res = await onTranslate(result.summary, selectedLanguage);
+    if (res) {
+      setTranslatedSummary(res);
+      setShowTranslated(true);
+    }
+    setIsTranslating(false);
+  };
+
   return (
     <div className="analysis-workspace-stack space-y-6" role="region" aria-label="AI Document Review">
       {/* Sample Banner if viewing illustrative sample */}
       {isSample && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3 text-xs flex items-center justify-between">
+        <div className="bg-amber-50/80 border border-amber-200 text-amber-900 rounded-lg p-3 text-xs flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Sparkles size={14} className="text-amber-600 shrink-0" />
-            Showing illustrative sample review. Connect your Gemini API key in Settings to analyze your own custom contracts.
+            Showing illustrative sample review. You can analyze any contract instantly with Gemini AI.
           </span>
         </div>
       )}
 
       {/* Plain-English Overview / Summary */}
       <section className="panel summary-panel" aria-label="Executive summary">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="text-emerald-600" size={18} aria-hidden="true" />
-          <h3 className="text-base font-semibold text-slate-900">Plain-English Overview</h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="text-emerald-600" size={18} aria-hidden="true" />
+            <h3 className="text-base font-semibold text-slate-900">Plain-English Overview</h3>
+          </div>
+
+          {onTranslate && (
+            <div className="flex items-center gap-1.5 bg-slate-50 p-1 border border-slate-200 rounded-lg">
+              <select
+                value={selectedLanguage}
+                onChange={(e) => {
+                  setSelectedLanguage(e.target.value);
+                  setTranslatedSummary(null);
+                  setShowTranslated(false);
+                }}
+                className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-700 outline-none"
+                aria-label="Select summary translation language"
+              >
+                <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+                <option value="Spanish (Español)">Spanish (Español)</option>
+                <option value="French (Français)">French (Français)</option>
+                <option value="German (Deutsch)">German (Deutsch)</option>
+                <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+                <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+                <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+                <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+                <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                <option value="Japanese (日本語)">Japanese (日本語)</option>
+              </select>
+
+              {translatedSummary ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTranslated(!showTranslated)}
+                  className="text-xs h-7"
+                >
+                  {showTranslated ? "View Original" : "View Translated"}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTranslateSummary}
+                  disabled={isTranslating || busy}
+                  className="text-xs h-7"
+                >
+                  {isTranslating ? <LoaderCircle className="spin" size={12} /> : <Sparkles size={12} />}
+                  {isTranslating ? "Translating…" : "Translate"}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
-        <p className="summary-text text-slate-700 leading-relaxed text-sm">{result.summary}</p>
+        <p className="summary-text text-slate-700 leading-relaxed text-sm">
+          {showTranslated && translatedSummary ? translatedSummary : result.summary}
+        </p>
       </section>
 
       {/* Key Clauses Breakdown with Risk Badges */}

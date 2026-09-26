@@ -104,30 +104,40 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
+  margin-bottom: 20px;
 }
-.doc-db-search {
+.doc-db-search, .doc-search-box {
   position: relative;
   flex: 1;
-  max-width: 360px;
+  min-width: 240px;
+  max-width: 420px;
 }
-.doc-db-search .search-icon {
+.doc-db-search .search-icon, .doc-search-box .search-icon {
   position: absolute;
-  left: 11px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
   pointer-events: none;
 }
-.doc-db-search .search-input {
+.doc-db-search .search-input, .doc-search-box .search-input {
+  width: 100%;
   padding-left: 36px;
   padding-right: 32px;
-  height: 38px;
+  height: 40px;
   background: #fff;
-  border-color: #cbd5e1;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 13.5px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.doc-db-search .search-clear {
+.doc-db-search .search-input:focus, .doc-search-box .search-input:focus {
+  border-color: #5650cb;
+  box-shadow: 0 0 0 3px rgba(86, 80, 203, 0.12);
+}
+.doc-db-search .search-clear, .doc-search-box .search-clear {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -136,11 +146,16 @@
   background: transparent;
   border: none;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
 }
 .doc-db-metrics {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 .doc-count-tag {
   display: inline-flex;
@@ -150,11 +165,13 @@
   font-weight: 500;
   color: #475569;
   background: #edf2f7;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 20px;
+  white-space: nowrap;
 }
 .add-doc-btn {
   height: 38px;
+  white-space: nowrap;
 }
 
 /* Document Selector Grid */

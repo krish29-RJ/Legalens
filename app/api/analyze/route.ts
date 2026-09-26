@@ -2,7 +2,8 @@ import { LEGALENS_CONFIG } from "@/lib/config";
 import { 
   analysisRequestSchema, 
   legalensResultSchema, 
-  questionAnswerSchema 
+  questionAnswerSchema,
+  translationResultSchema,
 } from "@/lib/schema";
 import { checkRateLimit } from "@/lib/ratelimit";
 
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
 
     if (!apiKey) {
       return createJsonResponse(
-        { error: "Connect your Gemini API key using ‘Connect Gemini’, then try again. The sample review is available without a key." },
+        { error: "Gemini API key is not configured on the server. Please set GEMINI_API_KEY in your environment variables." },
         503
       );
     }
@@ -102,7 +103,9 @@ CRITICAL SECURITY INSTRUCTIONS:
 - Ground every claim strictly in the provided document text.
 - Quotes MUST be verbatim substrings of the text.
 ${
-  b.mode === "question"
+  b.mode === "translate"
+    ? `Return JSON: {"translatedText": string, "language": string}. Translate the provided legal document or analysis into ${b.targetLanguage || "Hindi"} accurately. Keep legal clarity and natural, readable phrasing for non-lawyers.`
+    : b.mode === "question"
     ? 'Return JSON: {"answer": string}. Answer the question using only facts from the document. Cite exact excerpts. If the document does not contain the answer, explicitly state that.'
     : b.mode === "compare"
     ? 'Return JSON: {"summary": string, "clauses": [{"title": string, "explanation": string, "quote": string, "attention": boolean, "category": "liability"|"payment"|"termination"|"confidentiality"|"intellectual_property"|"general", "riskLevel": "critical"|"caution"|"standard"}], "checklist": string[], "questions": string[]}. Compare original and revised agreements. Highlight added risks, modified terms, and deleted protections.'
@@ -198,6 +201,14 @@ ${b.question}
     }
 
     // 6. Output Schema Validation & Grounding Verification
+    if (b.mode === "translate") {
+      const parsedTranslation = translationResultSchema.safeParse(decoded);
+      if (!parsedTranslation.success) {
+        return createJsonResponse({ translatedText: responseText, language: b.targetLanguage || "Hindi" }, 200);
+      }
+      return createJsonResponse(parsedTranslation.data, 200);
+    }
+
     if (b.mode === "question") {
       const parsedAnswer = questionAnswerSchema.safeParse(decoded);
       if (!parsedAnswer.success) {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LEGALENS_CONFIG } from "./config";
+import { LEGALENS_CONFIG } from "./config.ts";
 
 export const analysisRequestSchema = z.object({
   document: z
@@ -22,7 +22,8 @@ export const analysisRequestSchema = z.object({
       message: `Question exceeds maximum length of ${LEGALENS_CONFIG.QUESTION.MAX_LENGTH} characters.`,
     })
     .default(""),
-  mode: z.enum(["analyze", "compare", "question"]),
+  mode: z.enum(["analyze", "compare", "question", "translate"]),
+  targetLanguage: z.string().max(50).optional().default("Hindi"),
   key: z.string().max(250).optional(),
   model: z
     .string()
@@ -32,6 +33,13 @@ export const analysisRequestSchema = z.object({
 });
 
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
+
+export const translationResultSchema = z.object({
+  translatedText: z.string().min(1),
+  language: z.string().optional(),
+});
+
+export type TranslationResult = z.infer<typeof translationResultSchema>;
 
 export const clauseAnalysisSchema = z.object({
   title: z.string().min(1),

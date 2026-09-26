@@ -220,6 +220,42 @@ export function useLegalens() {
     [text, secondText, key, model, activeDocId, name]
   );
 
+  const translateContent = useCallback(
+    async (contentToTranslate: string, targetLanguage = "Hindi") => {
+      setBusy(true);
+      setError("");
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            document: contentToTranslate,
+            mode: "translate",
+            targetLanguage,
+            key: key.trim() || undefined,
+            model,
+          }),
+        });
+
+        const data = (await response.json()) as any;
+        if (!response.ok) {
+          throw new Error(data.error || "Translation failed.");
+        }
+
+        recordActivity("analysis", "Translated text", `Translated to ${targetLanguage}`, activeDocId, name);
+        setActivities(getStoredActivities());
+        return data.translatedText as string;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Translation failed.";
+        setError(msg);
+        return null;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [key, model, activeDocId, name]
+  );
+
   const exportBackup = useCallback(() => {
     const backupData = {
       app: "Legalens",
@@ -265,6 +301,7 @@ export function useLegalens() {
     deleteDocument,
     toggleChecklistItem,
     runAnalysis,
+    translateContent,
     exportBackup,
     clearActivities: clearStoredActivities,
   };

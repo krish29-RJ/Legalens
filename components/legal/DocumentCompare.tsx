@@ -20,6 +20,7 @@ interface DocumentCompareProps {
   onCompare: () => void;
   busy: boolean;
   result: Result | null;
+  onTranslate?: (text: string, language: string) => Promise<string | null>;
 }
 
 export function DocumentCompare({
@@ -30,8 +31,24 @@ export function DocumentCompare({
   onCompare,
   busy,
   result,
+  onTranslate,
 }: DocumentCompareProps) {
   const [secondName, setSecondName] = useState("Revised draft");
+  const [selectedLanguage, setSelectedLanguage] = useState("Hindi (हिंदी)");
+  const [translatedSummary, setTranslatedSummary] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showTranslated, setShowTranslated] = useState(false);
+
+  const handleTranslate = async () => {
+    if (!onTranslate || !result?.summary) return;
+    setIsTranslating(true);
+    const res = await onTranslate(result.summary, selectedLanguage);
+    if (res) {
+      setTranslatedSummary(res);
+      setShowTranslated(true);
+    }
+    setIsTranslating(false);
+  };
 
   return (
     <div className="compare-stack space-y-6" role="region" aria-label="Contract comparison tool">
@@ -94,11 +111,65 @@ export function DocumentCompare({
       {result && (
         <div className="space-y-4">
           <section className="panel summary-panel">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="text-blue-600" size={18} aria-hidden="true" />
-              <h3 className="text-base font-semibold text-slate-900">Comparative Summary of Changes</h3>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="text-blue-600" size={18} aria-hidden="true" />
+                <h3 className="text-base font-semibold text-slate-900">Comparative Summary of Changes</h3>
+              </div>
+
+              {onTranslate && (
+                <div className="flex items-center gap-1.5 bg-slate-50 p-1 border border-slate-200 rounded-lg">
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => {
+                      setSelectedLanguage(e.target.value);
+                      setTranslatedSummary(null);
+                      setShowTranslated(false);
+                    }}
+                    className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-slate-700 outline-none"
+                    aria-label="Select translation language"
+                  >
+                    <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+                    <option value="Spanish (Español)">Spanish (Español)</option>
+                    <option value="French (Français)">French (Français)</option>
+                    <option value="German (Deutsch)">German (Deutsch)</option>
+                    <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+                    <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+                    <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                    <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+                    <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+                    <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                    <option value="Japanese (日本語)">Japanese (日本語)</option>
+                  </select>
+
+                  {translatedSummary ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowTranslated(!showTranslated)}
+                      className="text-xs h-7"
+                    >
+                      {showTranslated ? "View Original" : "View Translated"}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleTranslate}
+                      disabled={isTranslating || busy}
+                      className="text-xs h-7"
+                    >
+                      {isTranslating ? <LoaderCircle className="spin" size={12} /> : <Sparkles size={12} />}
+                      {isTranslating ? "Translating…" : "Translate"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
-            <p className="summary-text text-slate-700 leading-relaxed text-sm">{result.summary}</p>
+
+            <p className="summary-text text-slate-700 leading-relaxed text-sm">
+              {showTranslated && translatedSummary ? translatedSummary : result.summary}
+            </p>
           </section>
 
           <section className="panel clauses-panel">

@@ -46,11 +46,11 @@ export function DocumentDatabase({
   }, [documents, searchQuery]);
 
   return (
-    <div className="doc-database-section">
+    <div className="doc-db-layout">
       {/* Database Toolbar */}
-      <div className="doc-database-toolbar">
-        <div className="doc-search-box">
-          <Search size={15} className="search-icon" aria-hidden="true" />
+      <div className="doc-db-toolbar">
+        <div className="doc-db-search">
+          <Search size={16} className="search-icon" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search saved documents by title or clause text…"
@@ -73,7 +73,7 @@ export function DocumentDatabase({
 
         <div className="doc-db-metrics">
           <span className="doc-count-tag" aria-live="polite">
-            <Database size={13} aria-hidden="true" /> {documents.length}{" "}
+            <Database size={14} aria-hidden="true" /> {documents.length}{" "}
             {documents.length === 1 ? "document" : "documents"} in database
           </span>
           <Button size="sm" onClick={onAddDoc} className="add-doc-btn">

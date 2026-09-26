@@ -10,14 +10,12 @@ export const LEGALENS_CONFIG = {
     MAX_LENGTH: 1500,
   },
   MODELS: {
-    DEFAULT: 'gemini-2.5-flash',
-    FALLBACK: 'gemini-3.5-flash-lite',
+    DEFAULT: 'gemini-3.5-flash-lite',
+    FALLBACK: 'gemini-2.5-flash',
     SUPPORTED: [
-      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Recommended: fast, high accuracy, and low latency' },
+      { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', description: 'Recommended: High-speed, powerful legal analysis' },
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Fast, high accuracy legal reasoning' },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: 'Deep reasoning for complex multi-party agreements' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Lightweight and dependable for standard agreements' },
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Comprehensive legal document analysis' },
-      { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', description: 'High-throughput preview model' },
     ] as const,
     TIMEOUT_MS: 45000,
     TEMPERATURE: 0.2,
