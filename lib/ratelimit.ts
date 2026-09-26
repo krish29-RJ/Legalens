@@ -1,4 +1,4 @@
-import { LEGALENS_CONFIG } from "./config.ts";
+import { LEGALENS_CONFIG } from "./config";
 
 interface RateLimitRecord {
   timestamps: number[];

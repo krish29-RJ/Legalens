@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { checkRateLimit } from "../lib/ratelimit.ts";
-import { LEGALENS_CONFIG } from "../lib/config.ts";
+import { checkRateLimit } from "../lib/ratelimit";
+import { LEGALENS_CONFIG } from "../lib/config";
 
 test("Rate Limit: allows requests within threshold", () => {
   const testClient = "test_client_allowed_" + Date.now();

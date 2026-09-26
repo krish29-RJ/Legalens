@@ -1,7 +1,7 @@
 "use client";
 
-import { LEGALENS_CONFIG } from "./config.ts";
-import type { LegalensResult, ClauseAnalysis } from "./schema.ts";
+import { LEGALENS_CONFIG } from "./config";
+import type { LegalensResult, ClauseAnalysis } from "./schema";
 
 export type Result = LegalensResult;
 export type Clause = ClauseAnalysis;

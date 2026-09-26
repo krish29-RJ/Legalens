@@ -11,7 +11,7 @@ import {
   recordActivity,
   getStoredChecklistProgress,
   saveStoredChecklistProgress,
-} from "../lib/storage.ts";
+} from "../lib/storage";
 
 // Setup browser-like localStorage mock in Node for tests
 class MemoryStorage {
