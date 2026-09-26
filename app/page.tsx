@@ -365,10 +365,10 @@ export default function Page() {
                     <DocumentViewer
                       document={activeDocument}
                       busy={busy}
+                      isWorkspaceView={true}
                       onEdit={() => setModal("document")}
                       onDelete={(id) => handleDeleteTrigger(id)}
                       onAnalyze={() => runAnalysis("analyze")}
-                      onViewReview={() => setView("Workspace")}
                       onTranslate={translateContent}
                     />
                   )}

@@ -19,7 +19,8 @@ interface DocumentViewerProps {
   onEdit: () => void;
   onDelete: (id: string) => void;
   onAnalyze: () => void;
-  onViewReview: () => void;
+  onViewReview?: () => void;
+  isWorkspaceView?: boolean;
   onTranslate?: (text: string, language: string) => Promise<string | null>;
 }
 
@@ -46,6 +47,7 @@ export function DocumentViewer({
   onDelete,
   onAnalyze,
   onViewReview,
+  isWorkspaceView = false,
   onTranslate,
 }: DocumentViewerProps) {
   const [copied, setCopied] = useState(false);
@@ -164,14 +166,25 @@ export function DocumentViewer({
           >
             <Trash2 size={14} /> Delete permanently
           </Button>
-          {document.result ? (
-            <Button size="sm" onClick={onViewReview}>
-              <Sparkles size={14} /> View AI Review
-            </Button>
-          ) : (
-            <Button size="sm" onClick={onAnalyze} disabled={busy}>
+          {isWorkspaceView ? (
+            <Button size="sm" onClick={onAnalyze} disabled={busy} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               {busy ? <LoaderCircle className="spin" size={14} /> : <Sparkles size={14} />}
-              Analyze with Gemini
+              {busy ? "Analyzing with Gemini…" : "Re-analyze with Gemini"}
+            </Button>
+          ) : document.result ? (
+            <div className="flex items-center gap-1.5">
+              <Button size="sm" onClick={onViewReview} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Sparkles size={14} /> View AI Review
+              </Button>
+              <Button variant="outline" size="sm" onClick={onAnalyze} disabled={busy}>
+                {busy ? <LoaderCircle className="spin" size={14} /> : <Sparkles size={14} />}
+                Re-analyze
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" onClick={onAnalyze} disabled={busy} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {busy ? <LoaderCircle className="spin" size={14} /> : <Sparkles size={14} />}
+              {busy ? "Analyzing with Gemini…" : "Analyze with Gemini"}
             </Button>
           )}
         </div>
