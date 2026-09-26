@@ -22,7 +22,7 @@ export const analysisRequestSchema = z.object({
       message: `Question exceeds maximum length of ${LEGALENS_CONFIG.QUESTION.MAX_LENGTH} characters.`,
     })
     .default(""),
-  mode: z.enum(["analyze", "compare", "question", "translate"]),
+  mode: z.enum(["analyze", "compare", "question", "translate"]).default("analyze"),
   targetLanguage: z.string().max(50).optional().default("Hindi"),
   key: z.string().max(250).optional(),
   model: z
