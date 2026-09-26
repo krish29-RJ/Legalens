@@ -42,24 +42,50 @@ export const translationResultSchema = z.object({
 export type TranslationResult = z.infer<typeof translationResultSchema>;
 
 export const clauseAnalysisSchema = z.object({
-  title: z.string().min(1),
-  explanation: z.string().min(1),
-  quote: z.string().min(1),
-  attention: z.boolean().default(false),
+  title: z.preprocess((v) => (typeof v === "string" ? v : "Key Clause"), z.string().default("Key Clause")),
+  explanation: z.preprocess((v) => (typeof v === "string" ? v : "Explanation not provided"), z.string().default("")),
+  quote: z.preprocess((v) => (typeof v === "string" ? v : ""), z.string().default("")),
+  attention: z.preprocess((v) => v === true || v === "true" || v === 1, z.boolean()).default(false),
   category: z
-    .enum(["liability", "payment", "termination", "confidentiality", "intellectual_property", "general"])
-    .optional()
+    .preprocess((val) => {
+      if (typeof val !== "string") return "general";
+      const s = val.toLowerCase().replace(/[\s-]/g, "_");
+      if (["liability", "payment", "termination", "confidentiality", "intellectual_property"].includes(s)) {
+        return s;
+      }
+      return "general";
+    }, z.enum(["liability", "payment", "termination", "confidentiality", "intellectual_property", "general"]))
     .default("general"),
-  riskLevel: z.enum(["critical", "caution", "standard"]).optional().default("standard"),
+  riskLevel: z
+    .preprocess((val) => {
+      if (typeof val !== "string") return "standard";
+      const s = val.toLowerCase();
+      if (s.includes("critical") || s.includes("high") || s.includes("danger") || s.includes("red")) return "critical";
+      if (s.includes("caution") || s.includes("medium") || s.includes("warn") || s.includes("yellow") || s.includes("moderate")) return "caution";
+      return "standard";
+    }, z.enum(["critical", "caution", "standard"]))
+    .default("standard"),
 });
 
 export type ClauseAnalysis = z.infer<typeof clauseAnalysisSchema>;
 
 export const legalensResultSchema = z.object({
-  summary: z.string().min(1),
-  clauses: z.array(clauseAnalysisSchema).max(12),
-  checklist: z.array(z.string().min(1)).max(15),
-  questions: z.array(z.string().min(1)).max(10),
+  summary: z.preprocess((v) => (typeof v === "string" ? v : "Analysis summary generated."), z.string().default("")),
+  clauses: z
+    .preprocess((v) => (Array.isArray(v) ? v : []), z.array(clauseAnalysisSchema))
+    .default([]),
+  checklist: z
+    .preprocess(
+      (v) => (Array.isArray(v) ? v.map((i) => (typeof i === "string" ? i : String(i?.item || i?.text || i))).filter(Boolean) : []),
+      z.array(z.string())
+    )
+    .default([]),
+  questions: z
+    .preprocess(
+      (v) => (Array.isArray(v) ? v.map((i) => (typeof i === "string" ? i : String(i?.question || i?.text || i))).filter(Boolean) : []),
+      z.array(z.string())
+    )
+    .default([]),
 });
 
 export type LegalensResult = z.infer<typeof legalensResultSchema>;

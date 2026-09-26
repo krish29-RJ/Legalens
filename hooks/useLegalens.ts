@@ -162,7 +162,12 @@ export function useLegalens() {
   );
 
   const runAnalysis = useCallback(
-    async (mode: "analyze" | "compare" | "question", customQuestion?: string) => {
+    async (mode: "analyze" | "compare" | "question", customQuestion?: string, overrideText?: string) => {
+      const docText = overrideText || text;
+      if (!docText.trim() && mode !== "compare") {
+        setError("Please enter or select agreement text to analyze.");
+        return;
+      }
       setBusy(true);
       setError("");
       try {
@@ -170,7 +175,7 @@ export function useLegalens() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            document: text,
+            document: docText,
             second: mode === "compare" ? secondText : undefined,
             question: mode === "question" ? customQuestion : undefined,
             mode,

@@ -397,8 +397,15 @@ export default function Page() {
                   busy={busy}
                   onEdit={() => setModal("document")}
                   onDelete={(id) => handleDeleteTrigger(id)}
-                  onAnalyze={() => runAnalysis("analyze")}
-                  onViewReview={() => setView("Workspace")}
+                  onAnalyze={() => {
+                    if (activeDocument) selectDocument(activeDocument);
+                    setView("Workspace");
+                    runAnalysis("analyze", undefined, activeDocument.text);
+                  }}
+                  onViewReview={() => {
+                    if (activeDocument) selectDocument(activeDocument);
+                    setView("Workspace");
+                  }}
                   onTranslate={translateContent}
                 />
               )}
