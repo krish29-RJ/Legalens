@@ -34,6 +34,11 @@ export const LEGALENS_CONFIG = {
   SEARCH: {
     DEBOUNCE_MS: 300,
   },
+  CACHE: {
+    ENABLED: true,
+    MAX_ENTRIES: 500,
+    TTL_MS: 30 * 60 * 1000, // 30 minutes
+  },
   SECURITY_HEADERS: {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',

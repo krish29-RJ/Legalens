@@ -6,6 +6,7 @@ import {
   translationResultSchema,
 } from "@/lib/schema";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { analysisCache } from "@/lib/cache";
 
 function getClientIdentifier(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -15,11 +16,15 @@ function getClientIdentifier(request: Request): string {
   return request.headers.get("cf-connecting-ip") || "anonymous_client";
 }
 
-function createJsonResponse(data: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
+function createJsonResponse(
+  data: unknown, 
+  status = 200, 
+  extraHeaders: Record<string, string> = {}
+) {
   return Response.json(data, {
     status,
     headers: {
-      "Cache-Control": "no-store, max-age=0",
+      "Cache-Control": status === 200 ? "public, max-age=1800, stale-while-revalidate=86400" : "no-store, max-age=0",
       ...LEGALENS_CONFIG.SECURITY_HEADERS,
       ...extraHeaders,
     },
@@ -27,6 +32,8 @@ function createJsonResponse(data: unknown, status = 200, extraHeaders: Record<st
 }
 
 export async function POST(request: Request) {
+  const startTime = performance.now();
+
   try {
     // 1. Rate Limiting Check
     const clientId = getClientIdentifier(request);
@@ -91,7 +98,28 @@ export async function POST(request: Request) {
       return createJsonResponse({ error: "Please enter a specific question about the document." }, 400);
     }
 
-    // 4. Prompt Engineering with Prompt Injection Defenses
+    // 4. Check LRU Cache (Instant sub-10ms response for repeated queries)
+    const cacheKey = analysisCache.generateKey({
+      mode: b.mode,
+      document: b.document,
+      second: b.second,
+      question: b.question,
+      targetLanguage: b.targetLanguage,
+      model: b.model,
+    });
+
+    if (LEGALENS_CONFIG.CACHE?.ENABLED) {
+      const cached = analysisCache.get(cacheKey);
+      if (cached) {
+        const dur = Math.round(performance.now() - startTime);
+        return createJsonResponse(cached, 200, {
+          "X-Cache": "HIT",
+          "Server-Timing": `cache;desc="LRU Cache Hit", total;dur=${dur}`,
+        });
+      }
+    }
+
+    // 5. Prompt Engineering with Prompt Injection Defenses
     const systemPrompt = `You are Legalens, an expert legal document literacy assistant.
 Your goal is to provide clear, grounded legal information for non-lawyers.
 NEVER provide formal legal advice, representation, or definitive enforceability rulings.
@@ -130,7 +158,7 @@ ${b.question}
     : ""
 }`;
 
-    // 5. Upstream Gemini API Caller with Fallback Support
+    // 6. Upstream Gemini API Caller with Fallback Support
     const callGemini = async (modelName: string) => {
       return fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
@@ -200,44 +228,51 @@ ${b.question}
       );
     }
 
-    // 6. Output Schema Validation & Grounding Verification
+    // 7. Output Schema Validation & Grounding Verification
+    let finalPayload: unknown;
+
     if (b.mode === "translate") {
       const parsedTranslation = translationResultSchema.safeParse(decoded);
-      if (!parsedTranslation.success) {
-        return createJsonResponse({ translatedText: responseText, language: b.targetLanguage || "Hindi" }, 200);
-      }
-      return createJsonResponse(parsedTranslation.data, 200);
-    }
-
-    if (b.mode === "question") {
+      finalPayload = parsedTranslation.success 
+        ? parsedTranslation.data 
+        : { translatedText: responseText, language: b.targetLanguage || "Hindi" };
+    } else if (b.mode === "question") {
       const parsedAnswer = questionAnswerSchema.safeParse(decoded);
-      if (!parsedAnswer.success) {
-        return createJsonResponse({ answer: responseText }, 200);
+      finalPayload = parsedAnswer.success ? parsedAnswer.data : { answer: responseText };
+    } else {
+      const parsedResult = legalensResultSchema.safeParse(decoded);
+      if (!parsedResult.success) {
+        return createJsonResponse(
+          { error: "Analysis format did not match expected structure. Please retry." },
+          502
+        );
       }
-      return createJsonResponse(parsedAnswer.data, 200);
+
+      const result = parsedResult.data;
+
+      // Grounding verification: Ensure quotes exist in the source document
+      result.clauses = result.clauses.map(c => {
+        const inDoc1 = b.document.includes(c.quote);
+        const inDoc2 = b.mode === "compare" && b.second.includes(c.quote);
+        return {
+          ...c,
+          quote: inDoc1 || inDoc2 ? c.quote : "Source excerpt could not be directly verified. Verify against original text.",
+        };
+      });
+
+      finalPayload = result;
     }
 
-    const parsedResult = legalensResultSchema.safeParse(decoded);
-    if (!parsedResult.success) {
-      return createJsonResponse(
-        { error: "Analysis format did not match expected structure. Please retry." },
-        502
-      );
+    // 8. Cache successful result
+    if (LEGALENS_CONFIG.CACHE?.ENABLED) {
+      analysisCache.set(cacheKey, finalPayload);
     }
 
-    const result = parsedResult.data;
-
-    // Grounding verification: Ensure quotes exist in the source document
-    result.clauses = result.clauses.map(c => {
-      const inDoc1 = b.document.includes(c.quote);
-      const inDoc2 = b.mode === "compare" && b.second.includes(c.quote);
-      return {
-        ...c,
-        quote: inDoc1 || inDoc2 ? c.quote : "Source excerpt could not be directly verified. Verify against original text.",
-      };
+    const durationMs = Math.round(performance.now() - startTime);
+    return createJsonResponse(finalPayload, 200, {
+      "X-Cache": "MISS",
+      "Server-Timing": `llm;desc="Gemini API", total;dur=${durationMs}`,
     });
-
-    return createJsonResponse(result, 200);
   } catch (err: unknown) {
     if (err instanceof Error && err.name === "TimeoutError") {
       return createJsonResponse(
