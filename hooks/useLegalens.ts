@@ -91,23 +91,28 @@ export function useLegalens() {
   }, []);
 
   const saveDocument = useCallback(
-    (docName: string, docText: string) => {
+    (docName: string, docText: string, targetId?: string, isNew = false) => {
       if (!docText.trim()) {
         setError("Please enter document text.");
         return null;
       }
-      const isExisting = !!activeDocId;
+      const existingId = isNew ? undefined : (targetId !== undefined ? targetId : (activeDocId || undefined));
+      const existingDoc = existingId ? getStoredDocuments().find((d) => d.id === existingId) : null;
+      const isExisting = Boolean(existingId && existingDoc);
+
       const saved = saveStoredDocument({
-        id: activeDocId || undefined,
+        id: existingId,
         name: docName.trim() || "Untitled document",
         text: docText,
-        result: isExisting ? result : null,
+        result: isExisting ? existingDoc?.result || null : null,
         isSample: false,
       });
 
       setActiveDocId(saved.id);
       setName(saved.name);
       setText(saved.text);
+      setResult(saved.result || null);
+      setIsSample(false);
       setError("");
 
       const docs = getStoredDocuments();
@@ -122,7 +127,7 @@ export function useLegalens() {
       setActivities(getStoredActivities());
       return saved;
     },
-    [activeDocId, result]
+    [activeDocId]
   );
 
   const deleteDocument = useCallback(

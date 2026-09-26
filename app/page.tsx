@@ -91,6 +91,7 @@ export default function Page() {
 
   const [view, setView] = useState<string>("Workspace");
   const [modal, setModal] = useState<string>("");
+  const [editDocId, setEditDocId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StoredDocument | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,8 +122,21 @@ export default function Page() {
   };
 
   const handleCreateNewDocument = () => {
-    setName("Untitled document");
+    setEditDocId(null);
+    setName("");
     setText("");
+    setError("");
+    setModal("document");
+  };
+
+  const handleEditDocumentTrigger = (doc?: StoredDocument) => {
+    const target = doc || activeDocument;
+    if (target) {
+      setEditDocId(target.id);
+      setName(target.name);
+      setText(target.text);
+    }
+    setError("");
     setModal("document");
   };
 
@@ -131,9 +145,15 @@ export default function Page() {
       setError("Please enter or paste agreement text.");
       return;
     }
-    const saved = saveDocument(name, text);
+    const saved = saveDocument(
+      name.trim() || "Untitled document",
+      text,
+      editDocId || undefined,
+      !editDocId
+    );
     if (saved) {
       setModal("");
+      setView("Workspace");
     }
   };
 
@@ -357,7 +377,7 @@ export default function Page() {
                       document={activeDocument}
                       busy={busy}
                       isWorkspaceView={true}
-                      onEdit={() => setModal("document")}
+                      onEdit={() => handleEditDocumentTrigger(activeDocument)}
                       onDelete={(id) => handleDeleteTrigger(id)}
                       onAnalyze={() => runAnalysis("analyze")}
                       onTranslate={translateContent}
@@ -395,7 +415,7 @@ export default function Page() {
                 <DocumentViewer
                   document={activeDocument}
                   busy={busy}
-                  onEdit={() => setModal("document")}
+                  onEdit={() => handleEditDocumentTrigger(activeDocument)}
                   onDelete={(id) => handleDeleteTrigger(id)}
                   onAnalyze={() => {
                     if (activeDocument) selectDocument(activeDocument);
@@ -452,7 +472,7 @@ export default function Page() {
       <Dialog open={modal === "document"} onOpenChange={(open) => !open && setModal("")}>
         <DialogContent className="app-dialog" aria-describedby="doc-modal-desc">
           <DialogHeader>
-            <DialogTitle>{activeDocId ? "Edit document" : "Add new document"}</DialogTitle>
+            <DialogTitle>{editDocId ? "Edit document" : "Add new document"}</DialogTitle>
             <DialogDescription id="doc-modal-desc">
               Save your agreement text. It will be stored securely in your private browser database.
             </DialogDescription>
