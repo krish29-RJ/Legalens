@@ -4,8 +4,8 @@ import {
   analysisRequestSchema, 
   clauseAnalysisSchema, 
   legalensResultSchema 
-} from "../lib/schema.ts";
-import { LEGALENS_CONFIG } from "../lib/config.ts";
+} from "../lib/schema";
+import { LEGALENS_CONFIG } from "../lib/config";
 
 test("Validation: rejects document shorter than minimum length", () => {
   const shortDoc = "Too short";

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LEGALENS_CONFIG } from "./config.ts";
+import { LEGALENS_CONFIG } from "./config";
 
 export const analysisRequestSchema = z.object({
   document: z
