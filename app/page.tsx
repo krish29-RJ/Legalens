@@ -352,15 +352,6 @@ export default function Page() {
                 </div>
               ) : (
                 <>
-                  <AnalysisWorkspace
-                    result={result}
-                    busy={busy}
-                    onAskQuestion={(q) => runAnalysis("question", q)}
-                    answer={answer}
-                    isSample={isSample}
-                    onTranslate={translateContent}
-                  />
-
                   {activeDocument && (
                     <DocumentViewer
                       document={activeDocument}
@@ -372,6 +363,15 @@ export default function Page() {
                       onTranslate={translateContent}
                     />
                   )}
+
+                  <AnalysisWorkspace
+                    result={result}
+                    busy={busy}
+                    onAskQuestion={(q) => runAnalysis("question", q)}
+                    answer={answer}
+                    isSample={isSample}
+                    onTranslate={translateContent}
+                  />
                 </>
               )}
             </div>
